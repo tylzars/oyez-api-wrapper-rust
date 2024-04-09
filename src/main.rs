@@ -1,13 +1,8 @@
-//use std::io::Result;
-
-use reqwest::Response;
-
-#[tokio::main]
-async fn main() {   
+fn main() {   
     // TODO: Add In Getting Year/Docket
 
     println!("Grabbing from API");
-    let api_body: String = get_court_json().await;
+    let api_body: String = get_court_json();
     //api_body.push('b'); // This will break the JSON parsing and cause parse_json_data() to throw back an error message
     //println!("{}", api_body);
 
@@ -29,16 +24,15 @@ async fn main() {
     }
 }
 
-async fn get_court_json() -> String {
+fn get_court_json() -> String {
     println!("Started");
     let val = String::new();
     
-    let body = reqwest::get("https://api.oyez.org/cases/2023/22-429")
-        .await;
+    let body = reqwest::blocking::get("https://api.oyez.org/cases/2023/22-429");
         
     match body {
         Ok(res) => {
-            match res.text().await {
+            match res.text() {
                 Ok(str) => {
                     return str;
                 }
