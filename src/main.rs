@@ -1,5 +1,7 @@
 //use std::io::Result;
 
+use reqwest::Response;
+
 #[tokio::main]
 async fn main() {   
     // TODO: Add In Getting Year/Docket
@@ -29,16 +31,26 @@ async fn main() {
 
 async fn get_court_json() -> String {
     println!("Started");
+    let val = String::new();
+    
     let body = reqwest::get("https://api.oyez.org/cases/2023/22-429")
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
+        .await;
+        
+    match body {
+        Ok(res) => {
+            match res.text().await {
+                Ok(str) => {
+                    return str;
+                }
+                Err(e) => println!("Error in str: {}", e)
+            }
+        }
+        Err(e) => println!("Error in response: {}", e)
+    }
     
     //println!("body = {:?}", body);
 
-    body
+    val
 }
 
 fn parse_json_data(data: &String) -> Result<serde_json::Value, serde_json::Error> {
