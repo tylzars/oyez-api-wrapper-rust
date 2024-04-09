@@ -1,8 +1,12 @@
+use std::env;
+
 fn main() {   
-    // TODO: Add In Getting Year/Docket
+    // Get year/docket from command line
+    let args: Vec<String> = env::args().collect();
+    //println!("{} {}", &args[1], &args[2]);
 
     println!("Grabbing from API");
-    let api_body: String = get_court_json();
+    let api_body: String = get_court_json(&args[1], &args[2]);
     //api_body.push('b'); // This will break the JSON parsing and cause parse_json_data() to throw back an error message
     //println!("{}", api_body);
 
@@ -15,7 +19,7 @@ fn main() {
             if let Some(obj) = value.as_object() {
                 // Loop through all Key strings in HashMap
                 for key in obj.keys() {
-                    println!("{}", key);
+                    println!("{}: {}", key, obj[key]);
                 }
             }
         }
@@ -24,11 +28,18 @@ fn main() {
     }
 }
 
-fn get_court_json() -> String {
+fn get_court_json(year: &String, docket_num: &String) -> String {
     println!("Started");
     let val = String::new();
+
+    let mut base_url = String::from("https://api.oyez.org/cases/");
+    base_url.push_str(year);
+    base_url.push('/');
+    base_url.push_str(docket_num);
+
+    println!("{}", base_url);
     
-    let body = reqwest::blocking::get("https://api.oyez.org/cases/2023/22-429");
+    let body = reqwest::blocking::get(base_url);
         
     match body {
         Ok(res) => {
