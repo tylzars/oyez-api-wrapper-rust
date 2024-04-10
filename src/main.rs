@@ -1,12 +1,19 @@
 use std::env;
 
 fn main() {   
-    // Get year/docket from command line
+    // Get year/docket from command line // 2023 22-429
     let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        println!("Docket and Year not Provided, using default!");
+        std::process::exit(-1);
+    }
     //println!("{} {}", &args[1], &args[2]);
+    let year = args.get(1).expect("Couldn't Parse Year");
+    let docket_num = args.get(2).expect("Couldn't Parse Docket Number");
 
     println!("Grabbing from API");
-    let api_body: String = get_court_json(&args[1], &args[2]);
+    let api_body: String = get_court_json(year, docket_num);
     //api_body.push('b'); // This will break the JSON parsing and cause parse_json_data() to throw back an error message
     //println!("{}", api_body);
 
