@@ -1,24 +1,28 @@
-use std::env;
+use clap::Parser;
 
+/// Oyez API Wrapper
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Court Case Year
+    #[arg(short, long)]
+    year: String,
+
+    /// Court Docket Number
+    #[arg(short, long)]
+    docket_num: String,
+}
 fn main() {   
     // Get year/docket from command line // 2023 22-429
-    let args: Vec<String> = env::args().collect();
-
-    if args.len() < 2 {
-        println!("Docket and Year not Provided, using default!");
-        std::process::exit(-1);
-    }
-    //println!("{} {}", &args[1], &args[2]);
-    let year = args.get(1).expect("Couldn't Parse Year");
-    let docket_num = args.get(2).expect("Couldn't Parse Docket Number");
+    let args = Args::parse();
+    let year = args.year;
+    let docket_num = args.docket_num;
 
     println!("Grabbing from API");
-    let api_body: String = get_court_json(year, docket_num);
-    //api_body.push('b'); // This will break the JSON parsing and cause parse_json_data() to throw back an error message
-    //println!("{}", api_body);
+    let res: String = get_court_json(&year, &docket_num);
 
-    let parsed = parse_json_data(&api_body);
-    
+    // Make json into hashmap
+    let parsed = parse_json_data(&res);
     match parsed {
         // If is_ok()
         Ok(value) => {
@@ -36,23 +40,25 @@ fn main() {
 }
 
 fn get_court_json(year: &String, docket_num: &String) -> String {
-    println!("Started");
-    let val = String::new();
+    // Return Value
+    let mut val = String::new();
 
+    // Build API URL from user input
     let mut base_url = String::from("https://api.oyez.org/cases/");
     base_url.push_str(year);
     base_url.push('/');
     base_url.push_str(docket_num);
 
-    println!("{}", base_url);
+    // Debug Print URL
+    println!("Built URL: {}", base_url);
     
+    // Do HTTP Get
     let body = reqwest::blocking::get(base_url);
-        
     match body {
         Ok(res) => {
             match res.text() {
                 Ok(str) => {
-                    return str;
+                    val = str;
                 }
                 Err(e) => println!("Error in str: {}", e)
             }
@@ -60,8 +66,7 @@ fn get_court_json(year: &String, docket_num: &String) -> String {
         Err(e) => println!("Error in response: {}", e)
     }
     
-    //println!("body = {:?}", body);
-
+    // Return val
     val
 }
 
