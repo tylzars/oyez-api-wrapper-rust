@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde_json::Value;
 
 /// Oyez API Wrapper
 #[derive(Parser, Debug)]
@@ -14,6 +15,7 @@ struct Args {
 }
 fn main() {   
     // Get year/docket from command line // 2023 22-429
+    // ./target/debug/oyez_api --year 2023 --docket-num 22-429
     let args = Args::parse();
     let year = args.year;
     let docket_num = args.docket_num;
@@ -23,6 +25,7 @@ fn main() {
 
     // Make json into hashmap
     let parsed = parse_json_data(&res);
+    let mut parsed_hash = std::collections::HashMap::new();
     match parsed {
         // If is_ok()
         Ok(value) => {
@@ -30,6 +33,7 @@ fn main() {
             if let Some(obj) = value.as_object() {
                 // Loop through all Key strings in HashMap
                 for key in obj.keys() {
+                    parsed_hash.insert(key.clone(), obj[key].clone());
                     println!("{}: {}", key, obj[key]);
                 }
             }
@@ -37,6 +41,12 @@ fn main() {
         // If is_err()
         Err(e) => println!("Error parsing JSON: {}", e),
     }
+
+    println!("\n\n\n\n\n");
+    for key in parsed_hash.keys() {
+        println!("{}: {}", key, parsed_hash[key]);
+    }
+
 }
 
 fn get_court_json(year: &String, docket_num: &String) -> String {
