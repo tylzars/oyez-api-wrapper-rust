@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use clap::Parser;
 
 /// Oyez API Wrapper
@@ -22,7 +20,10 @@ fn main() {
     let docket_num = args.docket_num;
 
     println!("Grabbing from API");
-    let res: String = get_court_json(year, docket_num);
+    let res = match get_json(year, docket_num) {
+        Ok(res) => res,
+        Err(e) => panic!("Hit {e} processing GET."),
+    };
 
     // Make json into hashmap
     match parse_json_data(res) {
@@ -43,7 +44,7 @@ fn main() {
     }
 }
 
-fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String {
+fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
     // Return Value
     let mut val = String::new();
 
@@ -55,11 +56,13 @@ fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String 
     );
 
     // Build URL Struct
-    let url = if let Ok(url) = reqwest::Url::parse(&link) {
-        println!("Built URL: {}", url.as_str());
-        url
-    } else {
-        panic!("Couldn't make url!")
+    let url = match reqwest::Url::parse(&link) {
+        Ok(url) => {
+            println!("Built URL: {}", url.as_str());
+            url
+        }
+        // TODO: Switch this to return an error to propogate handling back to main
+        Err(e) => panic!("Couldn't build URL because {e}"),
     };
 
     // Do HTTP Get
@@ -74,7 +77,7 @@ fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String 
     }
 
     // Return val
-    val
+    Ok(val)
 }
 
 fn parse_json_data(data: impl AsRef<str>) -> Result<serde_json::Value, serde_json::Error> {
