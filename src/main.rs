@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use clap::Parser;
 
 /// Oyez API Wrapper
@@ -14,7 +16,7 @@ struct Args {
 }
 fn main() {
     // Get year/docket from command line // 2023 22-429
-    // ./target/debug/oyez_api --year 2023 --docket-num 22-429
+    // cargo run -- --year 2023 --docket-num 22-429
     let args = Args::parse();
     let year = args.year;
     let docket_num = args.docket_num;
@@ -23,8 +25,7 @@ fn main() {
     let res: String = get_court_json(year, docket_num);
 
     // Make json into hashmap
-    let parsed = parse_json_data(res);
-    match parsed {
+    match parse_json_data(res) {
         // If is_ok()
         Ok(value) => {
             // Interpt value in ok() as Object, which Some converts to a HashMap
@@ -38,7 +39,6 @@ fn main() {
         // If is_err()
         Err(e) => {
             println!("Error parsing JSON: {}", e);
-            return;
         }
     }
 }
@@ -47,18 +47,26 @@ fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String 
     // Return Value
     let mut val = String::new();
 
-    let url_end = year.as_ref().to_owned() + "/" + docket_num.as_ref();
-    let url = match reqwest::Url::parse("https://api.oyez.org/cases/") {
-        Ok(base) => base.join(&url_end),
-        Err(e) => reqwest::Url::parse("https://api.oyez.org/cases/"),
+    // User URL API Endpoint
+    let link = format!(
+        "https://api.oyez.org/cases/{}/{}",
+        year.as_ref(),
+        docket_num.as_ref()
+    );
+
+    // Build URL Struct
+    let url = if let Ok(url) = reqwest::Url::parse(&link) {
+        println!("Built URL: {}", url.as_str());
+        url
+    } else {
+        // I still don't get how I should handle this error...
+        // If it fails, I can't keep executing because I don't have an accurate URL
+        // But this requires me to return a URL
+        exit(-1);
     };
 
-    // Debug Print URL
-    println!("Built URL: {}", url.clone().unwrap().as_str());
-
     // Do HTTP Get
-    let body = reqwest::blocking::get(url.unwrap().as_str());
-    match body {
+    match reqwest::blocking::get(url.as_str()) {
         Ok(res) => match res.text() {
             Ok(str) => {
                 val = str;
