@@ -33,10 +33,9 @@ fn main() {
         Err(e) => panic!("Couldn't parse JSON becuase {e}"),
     };
 
-    // Why can't these three go inside of previous match ^^?????
-    let json_copy = json_data;
-    let json_as_obj = json_copy.as_object();
-    let proper_json = json_as_obj.unwrap();
+    // Why can't these two go inside of previous match ^^?????
+    let json_copy = json_data.as_object();
+    let proper_json = json_copy.unwrap();
 
     println!("Case ID is {}", proper_json["ID"]);
 }
