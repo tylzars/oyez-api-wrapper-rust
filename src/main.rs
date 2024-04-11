@@ -12,7 +12,7 @@ struct Args {
     #[arg(short, long)]
     docket_num: String,
 }
-fn main() {   
+fn main() {
     // Get year/docket from command line // 2023 22-429
     // ./target/debug/oyez_api --year 2023 --docket-num 22-429
     let args = Args::parse();
@@ -23,8 +23,7 @@ fn main() {
     let res: String = get_court_json(year, docket_num);
 
     // Make json into hashmap
-    let parsed = parse_json_data(&res);
-    //let mut parsed_hash = std::collections::HashMap::new();
+    let parsed = parse_json_data(res);
     match parsed {
         // If is_ok()
         Ok(value) => {
@@ -32,22 +31,16 @@ fn main() {
             if let Some(obj) = value.as_object() {
                 // Loop through all Key strings in HashMap
                 for key in obj.keys() {
-                    //parsed_hash.insert(key.clone(), obj[key].clone());
                     println!("{}: {}", key, obj[key]);
                 }
             }
         }
         // If is_err()
-        Err(e) => println!("Error parsing JSON: {}", e),
+        Err(e) => {
+            println!("Error parsing JSON: {}", e);
+            return;
+        }
     }
-
-    /*
-    println!("\n\n\n\n\n");
-    for key in parsed_hash.keys() {
-        println!("{}: {}", key, parsed_hash[key]);
-    }
-    */
-
 }
 
 fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String {
@@ -55,35 +48,32 @@ fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String 
     let mut val = String::new();
 
     // Build API URL from user input
-    let mut base_url = String::from("https://api.oyez.org/cases/");
-    base_url.push_str(year.as_ref());
-    base_url.push('/');
-    base_url.push_str(docket_num.as_ref());
+    let base = reqwest::Url::parse("https://api.oyez.org/cases/");
+    let url_end = year.as_ref().to_owned() + "/" + docket_num.as_ref();
+    let url = base.unwrap().join(&url_end);
 
     // Debug Print URL
-    println!("Built URL: {}", base_url);
-    
+    println!("Built URL: {}", url.clone().unwrap().as_str());
+
     // Do HTTP Get
-    let body = reqwest::blocking::get(base_url);
+    let body = reqwest::blocking::get(url.unwrap().as_str());
     match body {
-        Ok(res) => {
-            match res.text() {
-                Ok(str) => {
-                    val = str;
-                }
-                Err(e) => println!("Error in str: {}", e)
+        Ok(res) => match res.text() {
+            Ok(str) => {
+                val = str;
             }
-        }
-        Err(e) => println!("Error in response: {}", e)
+            Err(e) => println!("Error in str: {}", e),
+        },
+        Err(e) => println!("Error in response: {}", e),
     }
-    
+
     // Return val
     val
 }
 
-fn parse_json_data(data: &String) -> Result<serde_json::Value, serde_json::Error> {
+fn parse_json_data(data: impl AsRef<str>) -> Result<serde_json::Value, serde_json::Error> {
     // This will return a serde_json::Error if it fails
-    let v: serde_json::Value = serde_json::from_str(data)?;
+    let v: serde_json::Value = serde_json::from_str(data.as_ref())?;
     // This will return an serde_json::Value if previous line succeeds
     Ok(v)
 }
