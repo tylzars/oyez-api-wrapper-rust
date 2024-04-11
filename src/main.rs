@@ -59,10 +59,7 @@ fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String 
         println!("Built URL: {}", url.as_str());
         url
     } else {
-        // I still don't get how I should handle this error...
-        // If it fails, I can't keep executing because I don't have an accurate URL
-        // But this requires me to return a URL
-        exit(-1);
+        panic!("Couldn't make url!")
     };
 
     // Do HTTP Get
