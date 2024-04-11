@@ -47,10 +47,11 @@ fn get_court_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> String 
     // Return Value
     let mut val = String::new();
 
-    // Build API URL from user input
-    let base = reqwest::Url::parse("https://api.oyez.org/cases/");
     let url_end = year.as_ref().to_owned() + "/" + docket_num.as_ref();
-    let url = base.unwrap().join(&url_end);
+    let url = match reqwest::Url::parse("https://api.oyez.org/cases/") {
+        Ok(base) => base.join(&url_end),
+        Err(e) => reqwest::Url::parse("https://api.oyez.org/cases/"),
+    };
 
     // Debug Print URL
     println!("Built URL: {}", url.clone().unwrap().as_str());
