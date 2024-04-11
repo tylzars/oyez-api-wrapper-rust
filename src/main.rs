@@ -26,22 +26,19 @@ fn main() {
     };
 
     // Make json into hashmap
-    match parse_json_data(res) {
+    let json_data = match parse_json_data(res) {
         // If is_ok()
-        Ok(value) => {
-            // Interpt value in ok() as Object, which Some converts to a HashMap
-            if let Some(obj) = value.as_object() {
-                // Loop through all Key strings in HashMap
-                for key in obj.keys() {
-                    println!("{}: {}", key, obj[key]);
-                }
-            }
-        }
+        Ok(data) => data,
         // If is_err()
-        Err(e) => {
-            println!("Error parsing JSON: {}", e);
-        }
-    }
+        Err(e) => panic!("Couldn't parse JSON becuase {e}"),
+    };
+
+    // Why can't these three go inside of previous match ^^?????
+    let json_copy = json_data;
+    let json_as_obj = json_copy.as_object();
+    let proper_json = json_as_obj.unwrap();
+
+    println!("Case ID is {}", proper_json["ID"]);
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
