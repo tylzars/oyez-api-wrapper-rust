@@ -1,4 +1,5 @@
 use clap::Parser;
+use serde_json::Map;
 
 /// Oyez API Wrapper
 #[derive(Parser, Debug)]
@@ -38,6 +39,11 @@ fn main() {
     let proper_json = json_copy.unwrap();
 
     println!("Case ID is {}", proper_json["ID"]);
+
+    let ans = get_case_judges(proper_json);
+    for vaue in ans {
+        println!("Judge {} in main!", vaue);
+    }
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -81,4 +87,21 @@ fn parse_json_data(data: impl AsRef<str>) -> Result<serde_json::Value, serde_jso
     let v: serde_json::Value = serde_json::from_str(data.as_ref())?;
     // This will return an serde_json::Value if previous line succeeds
     Ok(v)
+}
+
+fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<String> {
+    let mut val = vec![];
+
+    let num_judges = json_data["decisions"][0]["votes"].clone();
+    let array_judges = num_judges.as_array().unwrap().len();
+
+    println!("Number of Judges: {}", array_judges);
+
+    for i in 0..array_judges {
+        let curr_judge = &json_data["decisions"][0]["votes"][i]["member"]["name"];
+        //println!("{}", curr_judge);
+        val.push(String::from(curr_judge.as_str().unwrap()));
+    }
+
+    val
 }
