@@ -45,7 +45,9 @@ fn main() {
         println!("Judge {}!", judge);
     }
 
-    println!("Lower Court: {}", get_lower_court(proper_json))
+    println!("Lower Court: {}", get_lower_court(proper_json));
+
+    println!("Case Facts: {}", get_case_facts(proper_json, true));
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -118,4 +120,15 @@ fn get_lower_court(json_data: &Map<String, serde_json::Value>) -> &str {
     };
 
     lower_court
+}
+
+fn get_case_facts(json_data: &Map<String, serde_json::Value>, html: bool) -> String {
+    if html {
+        let re = regex::Regex::new(r#"<[^<]+?>"#).unwrap();
+        let result = re.replace_all(json_data["facts_of_the_case"].as_str().unwrap(), "");
+        return String::from(result);
+    } else {
+        let result = json_data["facts_of_the_case"].as_str().unwrap();
+        return String::from(result);
+    }
 }
