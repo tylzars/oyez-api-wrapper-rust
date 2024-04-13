@@ -95,7 +95,7 @@ fn parse_json_data(data: impl AsRef<str>) -> Result<serde_json::Value, serde_jso
 
 fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
     // Get return vector size
-    let num_judges: usize = match json_data["decisions"][0]["votes"].clone().as_array() {
+    let num_judges: usize = match json_data["heard_by"][0]["members"].clone().as_array() {
         val => val.unwrap().len(),
     };
 
@@ -104,7 +104,7 @@ fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
 
     // Loop through all judges and add to vector
     for i in 0..num_judges {
-        let curr_judge = &json_data["decisions"][0]["votes"][i]["member"]["name"];
+        let curr_judge = &json_data["heard_by"][0]["members"][i]["name"];
         val.push(curr_judge.as_str().unwrap());
     }
 
