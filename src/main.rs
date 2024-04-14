@@ -34,9 +34,10 @@ fn main() {
         Err(e) => panic!("Couldn't parse JSON becuase {e}"),
     };
 
-    // Why can't these two go inside of previous match ^^?????
-    let json_copy = json_data.as_object();
-    let proper_json = json_copy.unwrap();
+    let proper_json = match json_data.as_object() {
+        Some(val) => val,
+        None => panic!("Invalid Docket/Year Provided"),
+    };
 
     println!("Case ID is {}", proper_json["ID"]);
 
