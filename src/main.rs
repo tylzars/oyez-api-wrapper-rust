@@ -27,8 +27,8 @@ fn main() {
         Err(e) => panic!("Hit {e} processing GET."),
     };
 
-    // Make json into hashmap                   // TODO: Remove this clone
-    let json_data = match parse_json_data(res.clone()) {
+    // Make json into hashmap
+    let json_data = match parse_json_data(&res) {
         // If is_ok()
         Ok(data) => data,
         // If is_err()
