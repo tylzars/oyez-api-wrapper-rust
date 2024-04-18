@@ -1,6 +1,6 @@
 use clap::Parser;
 use serde_json::Map;
-use std::{collections::HashMap, fs::File, io::Write};
+use std::{fs::File, io::Write};
 
 /// Oyez API Wrapper
 #[derive(Parser, Debug)]
@@ -51,9 +51,7 @@ fn main() {
 
     println!("Case Facts: {}", get_case_facts(proper_json, true));
 
-    // Just pass this proper_json...
-    let res_str = res.as_str();
-    write_json_to_file(res_str);
+    write_json_to_file(proper_json);
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -134,26 +132,32 @@ fn get_case_facts(json_data: &Map<String, serde_json::Value>, html: bool) -> Str
         let result = re.replace_all(json_data["facts_of_the_case"].as_str().unwrap(), "");
         // This needs to be created as result is swept up when this function ends breaking the reference
         // This is a great link: https://stackoverflow.com/questions/42248444/return-str-instead-of-stdborrowcow-str
-        return String::from(result);
+        String::from(result)
     } else {
         let result = json_data["facts_of_the_case"].as_str().unwrap();
-        return String::from(result);
+        String::from(result)
     }
 }
 
-fn write_json_to_file(data: impl AsRef<str>) {
+fn write_json_to_file(json_data: &Map<String, serde_json::Value>) {
     let mut file = match File::create("testing.txt") {
         Ok(val) => val,
         Err(e) => panic!("Couldn't make file {e}"),
     };
     // TODO: This has so much wrong with it...
-    // Make it use to_pretty_string from serde json
-    // Make this actually take in JSON
     // Check if file exists or overwrite
     // Take in Docket/Year for filename
     // Probs more....
 
-    let output_json = data.as_ref();
+    let output_json = serde_json::to_string_pretty(json_data);
 
-    write!(file, "{output_json}");
+    let test = match output_json {
+        Ok(val) => val,
+        Err(e) => panic!("Couldn't pretty print data becuase {e}"),
+    };
+
+    match write!(file, "{test}") {
+        Ok(()) => println!("Wrote to file!"),
+        Err(e) => panic!("Couldnt write to file because {e}"),
+    }
 }
