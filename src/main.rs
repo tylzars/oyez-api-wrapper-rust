@@ -14,6 +14,13 @@ struct Args {
     #[arg(short, long)]
     docket_num: String,
 }
+
+struct court_case {
+    year: String,
+    docket_num: String,
+    json: Map<String, serde_json::Value>,
+}
+
 fn main() {
     // Get year/docket from command line // 2023 22-429
     // cargo run -- --year 2023 --docket-num 22-429
@@ -39,6 +46,14 @@ fn main() {
         Some(val) => val,
         None => panic!("Invalid Docket/Year Provided"),
     };
+
+    /*
+    let court_case_t = court_case {
+        docket_num: docket_num,
+        year: year,
+        json: *proper_json,
+    };
+    */
 
     println!("Case ID is {}", proper_json["ID"]);
 
