@@ -35,7 +35,7 @@ fn main() {
     };
 
     // Make json into hashmap
-    let json_data = match parse_json_data(&res) {
+    let json_data = match parse_json_data(res) {
         // If is_ok()
         Ok(data) => data,
         // If is_err()
@@ -112,9 +112,11 @@ fn parse_json_data(data: impl AsRef<str>) -> Result<serde_json::Value, serde_jso
 
 fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
     // Get return vector size
-    let num_judges: usize = match json_data["heard_by"][0]["members"].clone().as_array() {
-        val => val.unwrap().len(),
-    };
+    let num_judges: usize = json_data["heard_by"][0]["members"]
+        .clone()
+        .as_array()
+        .unwrap()
+        .len();
 
     // Intialize return vector
     let mut val = Vec::with_capacity(num_judges);
@@ -131,10 +133,9 @@ fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
 
 fn get_lower_court(json_data: &Map<String, serde_json::Value>) -> &str {
     // Get Lower Court, if it's none return const str with no court
-    let lower_court = match json_data["lower_court"]["name"].as_str() {
-        Some(val) => val,
-        None => "Lower Court Not Found",
-    };
+    let lower_court = json_data["lower_court"]["name"]
+        .as_str()
+        .unwrap_or("Lower Court Not Found");
 
     lower_court
 }
