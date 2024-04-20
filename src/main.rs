@@ -61,6 +61,7 @@ fn main() {
     println!("Lower Court: {}", get_lower_court(&local_case));
     println!("Case Facts: {}", get_case_facts(&local_case, true));
     write_json_to_file(&local_case);
+    get_decision(&local_case);
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -166,4 +167,30 @@ fn write_json_to_file(case: &CourtCase) {
         Ok(()) => (),
         Err(e) => panic!("Couldnt write to file because {e}"),
     }
+}
+
+fn get_decision(case: &CourtCase) -> Map<String, serde_json::Value> {
+    let mut decision_map = Map::new();
+
+    decision_map.insert(
+        String::from("majority_vote"),
+        case.json["decisions"][0]["majority_vote"].clone(),
+    );
+
+    decision_map.insert(
+        String::from("minority_vote"),
+        case.json["decisions"][0]["minority_vote"].clone(),
+    );
+
+    decision_map.insert(
+        String::from("winning_party"),
+        case.json["decisions"][0]["winning_party"].clone(),
+    );
+
+    decision_map.insert(
+        String::from("decision_type"),
+        case.json["decisions"][0]["decision_type"].clone(),
+    );
+
+    decision_map
 }
