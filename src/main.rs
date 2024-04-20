@@ -15,7 +15,7 @@ struct Args {
     docket_num: String,
 }
 
-struct court_case {
+struct CourtCase {
     year: String,
     docket_num: String,
     json: Map<String, serde_json::Value>,
@@ -29,7 +29,7 @@ fn main() {
     let docket_num = args.docket_num;
 
     println!("Grabbing from API");
-    let res = match get_json(year, docket_num) {
+    let res = match get_json(&year, &docket_num) {
         Ok(res) => res,
         Err(e) => panic!("Hit {e} processing GET."),
     };
@@ -47,15 +47,13 @@ fn main() {
         None => panic!("Invalid Docket/Year Provided"),
     };
 
-    /*
-    let court_case_t = court_case {
-        docket_num: docket_num,
-        year: year,
-        json: *proper_json,
+    let local_case = CourtCase {
+        docket_num,
+        year,
+        json: proper_json.clone(),
     };
-    */
 
-    println!("Case ID is {}", proper_json["ID"]);
+    println!("Case ID is {}", local_case.json["ID"]);
 
     let case_judges = get_case_judges(proper_json);
     for judge in case_judges {
@@ -66,7 +64,7 @@ fn main() {
 
     println!("Case Facts: {}", get_case_facts(proper_json, true));
 
-    write_json_to_file(proper_json);
+    write_json_to_file(local_case);
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -154,8 +152,10 @@ fn get_case_facts(json_data: &Map<String, serde_json::Value>, html: bool) -> Str
     }
 }
 
-fn write_json_to_file(json_data: &Map<String, serde_json::Value>) {
-    let mut file = match File::create("testing.txt") {
+fn write_json_to_file(case: CourtCase) {
+    let file_path = format!("{}_{}.json", case.docket_num, case.year);
+
+    let mut file = match File::create(file_path) {
         Ok(val) => val,
         Err(e) => panic!("Couldn't make file {e}"),
     };
@@ -164,7 +164,7 @@ fn write_json_to_file(json_data: &Map<String, serde_json::Value>) {
     // Take in Docket/Year for filename
     // Probs more....
 
-    let output_json = serde_json::to_string_pretty(json_data);
+    let output_json = serde_json::to_string_pretty(&case.json);
 
     let test = match output_json {
         Ok(val) => val,
