@@ -62,6 +62,7 @@ fn main() {
     println!("Case Facts: {}", get_case_facts(&local_case, true));
     write_json_to_file(&local_case);
     get_decision(&local_case);
+    get_audio_links(&local_case);
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -170,6 +171,8 @@ fn write_json_to_file(case: &CourtCase) {
 }
 
 fn get_decision(case: &CourtCase) -> Map<String, serde_json::Value> {
+    // TODO: Implement get_judge_decisions inside this function
+
     let mut decision_map = Map::new();
 
     decision_map.insert(
@@ -193,4 +196,26 @@ fn get_decision(case: &CourtCase) -> Map<String, serde_json::Value> {
     );
 
     decision_map
+}
+
+fn get_audio_links(case: &CourtCase) -> reqwest::Url {
+    if let Some(value) = case.json["oral_argument_audio"].as_array() {
+        // TODO: Properly validate the below attempt to get HREF
+        let link = &value[0]["href"].as_str().unwrap();
+
+        // Build URL Struct
+        let url = match reqwest::Url::parse(&link) {
+            Ok(url) => {
+                println!("Built URL: {}", url.as_str());
+                url
+            }
+            Err(e) => panic!("Couldn't build URL because {e}"),
+        };
+
+        url
+    } else {
+        println!("Oral argument not present!");
+        // TODO: Figure out what should go here, maybe this should return a Result<>
+        reqwest::Url::parse("http://api.oyez.org").unwrap()
+    }
 }
