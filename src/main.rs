@@ -53,18 +53,14 @@ fn main() {
         json: proper_json.clone(),
     };
 
+    // Function Testing
     println!("Case ID is {}", local_case.json["ID"]);
-
-    let case_judges = get_case_judges(proper_json);
-    for judge in case_judges {
+    for judge in get_case_judges(&local_case) {
         println!("Judge {}!", judge);
     }
-
-    println!("Lower Court: {}", get_lower_court(proper_json));
-
-    println!("Case Facts: {}", get_case_facts(proper_json, true));
-
-    write_json_to_file(local_case);
+    println!("Lower Court: {}", get_lower_court(&local_case));
+    println!("Case Facts: {}", get_case_facts(&local_case, true));
+    write_json_to_file(&local_case);
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -110,9 +106,9 @@ fn parse_json_data(data: impl AsRef<str>) -> Result<serde_json::Value, serde_jso
     Ok(v)
 }
 
-fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
+fn get_case_judges(case: &CourtCase) -> Vec<&str> {
     // Get return vector size
-    let num_judges: usize = json_data["heard_by"][0]["members"]
+    let num_judges: usize = case.json["heard_by"][0]["members"]
         .clone()
         .as_array()
         .unwrap()
@@ -123,7 +119,7 @@ fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
 
     // Loop through all judges and add to vector
     for i in 0..num_judges {
-        let curr_judge = &json_data["heard_by"][0]["members"][i]["name"];
+        let curr_judge = &case.json["heard_by"][0]["members"][i]["name"];
         val.push(curr_judge.as_str().unwrap());
     }
 
@@ -131,49 +127,43 @@ fn get_case_judges(json_data: &Map<String, serde_json::Value>) -> Vec<&str> {
     val
 }
 
-fn get_lower_court(json_data: &Map<String, serde_json::Value>) -> &str {
+fn get_lower_court(case: &CourtCase) -> &str {
     // Get Lower Court, if it's none return const str with no court
-    let lower_court = json_data["lower_court"]["name"]
+    let lower_court = case.json["lower_court"]["name"]
         .as_str()
         .unwrap_or("Lower Court Not Found");
 
     lower_court
 }
 
-fn get_case_facts(json_data: &Map<String, serde_json::Value>, html: bool) -> String {
+fn get_case_facts(case: &CourtCase, html: bool) -> String {
     if html {
         let re = regex::Regex::new(r#"<[^<]+?>"#).unwrap();
-        let result = re.replace_all(json_data["facts_of_the_case"].as_str().unwrap(), "");
+        let result = re.replace_all(case.json["facts_of_the_case"].as_str().unwrap(), "");
         // This needs to be created as result is swept up when this function ends breaking the reference
         // This is a great link: https://stackoverflow.com/questions/42248444/return-str-instead-of-stdborrowcow-str
         String::from(result)
     } else {
-        let result = json_data["facts_of_the_case"].as_str().unwrap();
+        let result = case.json["facts_of_the_case"].as_str().unwrap();
         String::from(result)
     }
 }
 
-fn write_json_to_file(case: CourtCase) {
+fn write_json_to_file(case: &CourtCase) {
     let file_path = format!("{}_{}.json", case.docket_num, case.year);
 
     let mut file = match File::create(file_path) {
         Ok(val) => val,
         Err(e) => panic!("Couldn't make file {e}"),
     };
-    // TODO: This has so much wrong with it...
-    // Check if file exists or overwrite
-    // Take in Docket/Year for filename
-    // Probs more....
 
-    let output_json = serde_json::to_string_pretty(&case.json);
-
-    let test = match output_json {
+    let test = match serde_json::to_string_pretty(&case.json) {
         Ok(val) => val,
         Err(e) => panic!("Couldn't pretty print data becuase {e}"),
     };
 
     match write!(file, "{test}") {
-        Ok(()) => println!("Wrote to file!"),
+        Ok(()) => (),
         Err(e) => panic!("Couldnt write to file because {e}"),
     }
 }
