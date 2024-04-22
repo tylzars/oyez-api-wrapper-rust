@@ -63,6 +63,7 @@ fn main() {
     write_json_to_file(&local_case);
     get_decision(&local_case);
     get_audio_links(&local_case);
+    println!("Conclusion: {}", get_conclusion(&local_case, true));
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -217,5 +218,16 @@ fn get_audio_links(case: &CourtCase) -> reqwest::Url {
         println!("Oral argument not present!");
         // TODO: Figure out what should go here, maybe this should return a Result<>
         reqwest::Url::parse("http://api.oyez.org").unwrap()
+    }
+}
+
+fn get_conclusion(case: &CourtCase, html: bool) -> String {
+    let conculsion = case.json["conclusion"].as_str().unwrap();
+    if html {
+        let re = regex::Regex::new(r#"<[^<]+?>"#).unwrap();
+        let result = re.replace_all(conculsion, "");
+        String::from(result)
+    } else {
+        String::from(conculsion)
     }
 }
