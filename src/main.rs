@@ -206,15 +206,13 @@ fn get_audio_links(case: &CourtCase) -> reqwest::Url {
         let link = &value[0]["href"].as_str().unwrap();
 
         // Build URL Struct
-        let url = match reqwest::Url::parse(&link) {
+        match reqwest::Url::parse(link) {
             Ok(url) => {
                 println!("Built URL: {}", url.as_str());
                 url
             }
             Err(e) => panic!("Couldn't build URL because {e}"),
-        };
-
-        url
+        }
     } else {
         println!("Oral argument not present!");
         // TODO: Figure out what should go here, maybe this should return a Result<>
