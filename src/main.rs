@@ -64,6 +64,7 @@ fn main() {
     get_decision(&local_case);
     get_audio_links(&local_case);
     println!("Conclusion: {}", get_conclusion(&local_case, true));
+    println!("{}", get_basic_information(&local_case));
 }
 
 fn get_json(year: impl AsRef<str>, docket_num: impl AsRef<str>) -> Result<String, reqwest::Error> {
@@ -230,4 +231,17 @@ fn get_conclusion(case: &CourtCase, html: bool) -> String {
     } else {
         String::from(conculsion)
     }
+}
+
+fn get_basic_information(case: &CourtCase) -> String {
+    let case_name = &case.json["name"];
+    let case_first_party = &case.json["first_party"];
+    let case_second_party = &case.json["second_party"];
+
+    let data = format!(
+        "{}: {} vs {}",
+        case_name, case_first_party, case_second_party
+    );
+
+    data
 }
